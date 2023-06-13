@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["clientExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model attendance {
+  id                String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  class_schedule_id String         @db.Uuid
+  user_id           String         @db.Uuid
+  attended          Boolean
+  created_at        DateTime       @default(now()) @db.Timestamp(6)
+  updated_at        DateTime       @default(now()) @db.Timestamp(6)
+  class_schedule    class_schedule @relation(fields: [class_schedule_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user              user           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model belt_progression {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id        String   @db.Uuid
+  belt_color     String   @db.VarChar(255)
+  promotion_date DateTime @db.Timestamp(6)
+  created_at     DateTime @default(now()) @db.Timestamp(6)
+  updated_at     DateTime @default(now()) @db.Timestamp(6)
+  user           user     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model class_schedule {
+  id         String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  start_time DateTime     @db.Timestamp(6)
+  end_time   DateTime     @db.Timestamp(6)
+  dojo_id    String       @db.Uuid
+  created_at DateTime     @default(now()) @db.Timestamp(6)
+  updated_at DateTime     @default(now()) @db.Timestamp(6)
+  attendance attendance[]
+  dojo       dojo         @relation(fields: [dojo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model dojo {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String            @db.VarChar(255)
+  description     String?           @db.VarChar(255)
+  image           String?           @db.VarChar(255)
+  created_at      DateTime          @default(now()) @db.Timestamp(6)
+  updated_at      DateTime          @default(now()) @db.Timestamp(6)
+  user_id         String            @db.Uuid
+  tenant_id       String            @db.VarChar(255)
+  class_schedule  class_schedule[]
+  user            user              @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  membership_plan membership_plan[]
+  technique       technique[]
+}
+
+model membership_plan {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String   @db.VarChar(255)
+  price      Int
+  duration   Int
+  dojo_id    String   @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @default(now()) @db.Timestamp(6)
+  dojo       dojo     @relation(fields: [dojo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model technique {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @db.VarChar(255)
+  description String?  @db.VarChar(255)
+  video_url   String?  @db.VarChar(255)
+  dojo_id     String   @db.Uuid
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime @default(now()) @db.Timestamp(6)
+  dojo        dojo     @relation(fields: [dojo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email            String             @unique @db.VarChar(255)
+  firstName        String?            @db.VarChar(255)
+  lastName         String?            @db.VarChar(255)
+  roq_user_id      String             @db.VarChar(255)
+  tenant_id        String             @db.VarChar(255)
+  created_at       DateTime           @default(now()) @db.Timestamp(6)
+  updated_at       DateTime           @default(now()) @db.Timestamp(6)
+  attendance       attendance[]
+  belt_progression belt_progression[]
+  dojo             dojo[]
+}
